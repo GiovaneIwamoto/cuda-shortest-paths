@@ -1,132 +1,130 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include <math.h>
+#include <limits.h>
 
 #define TRUE 1
 #define FALSE 0
-#define INFINITY 999999
+#define INFINITY INT_MAX
 
 typedef int boolean;
 
-typedef struct
+void generate_random_graph(int V, int *adjacency_matrix)
 {
-    int u;
-    int v;
-} Edge;
+    srand(time(NULL));
 
-typedef struct
-{
-    int identifier;
-    boolean visited;
-} Vertex;
-
-Vertex *vertices;
-Edge *edges;
-int *weights;
-
-int find_edge(Vertex u, Vertex v, Edge *edges, int *weights, int E)
-{
-    for (int i = 0; i < E; i++)
-    {
-        if (edges[i].u == u.identifier && edges[i].v == v.identifier)
-        {
-            return weights[i];
-        }
-    }
-    return INFINITY;
-}
-
-/* Random graph with number of vertices V and edges E */
-void generate_graph(int V, int E)
-{
-    srand(time(NULL)); // Random numbers generation
-    /* Create vertices */
     for (int i = 0; i < V; i++)
     {
-        Vertex vertex = {.identifier = (int)i, .visited = FALSE};
-        vertices[i] = vertex;
-    }
-    /* Create edges */
-    for (int i = 0; i < E; i++)
-    {
-        /* Edge created and initialized with two random vertices */
-        Edge edg = {.u = (int)rand() % V, .v = rand() % V};
-        edges[i] = edg;
-        weights[i] = rand() % 10; /* Random weight*/
-    }
-}
-
-void dijkstra_serial(int V, int E, int *len, int *temp_distance)
-{
-    Vertex *root = (Vertex *)malloc(sizeof(Vertex) * V);
-
-    for (int count = 0; count < V; count++)
-    {
-        root[count].identifier = count;
-        root[count].visited = FALSE;
-    }
-
-    clock_t start = clock();
-
-    /* Each vertex in the graph */
-    for (int count = 0; count < V; count++)
-    {
-        /* Current vertex visited, init len array */
-        root[count].visited = TRUE;
-        len[root[count].identifier] = 0;
-        temp_distance[root[count].identifier] = 0;
-
-        /* Compute for vertices not equal to root */
-        for (int i = 0; i < V; i++)
+        for (int j = 0; j < V; j++)
         {
-            if (vertices[i].identifier != root[count].identifier)
+            if (i != j)
             {
-                len[(int)vertices[i].identifier] = find_edge(root[count], vertices[i], edges, weights, E);
-                temp_distance[vertices[i].identifier] = len[(int)vertices[i].identifier];
+                adjacency_matrix[i * V + j] = rand() % 10;
+                adjacency_matrix[j * V + i] = adjacency_matrix[i * V + j];
             }
             else
             {
-                vertices[i].visited = TRUE;
+                adjacency_matrix[i * V + j] = 0;
             }
         }
+    }
+}
 
-        /* Update distance based on neighboring vertices and their weights */
+void print_adjacency_matrix(int V, int *adjacency_matrix)
+{
+    printf("Adjacency Matrix:\n");
+    for (int i = 0; i < V; i++)
+    {
+        for (int j = 0; j < V; j++)
+        {
+            printf("%d ", adjacency_matrix[i * V + j]);
+        }
+        printf("\n");
+    }
+}
+
+int find_min_distance(int V, int *distance, boolean *visited)
+{
+    int min_distance = INFINITY;
+    int min_index = -1;
+
+    for (int v = 0; v < V; v++)
+    {
+        if (!visited[v] && distance[v] <= min_distance)
+        {
+            min_distance = distance[v];
+            min_index = v;
+        }
+    }
+    return min_index;
+}
+
+void print_path(int *parent, int vertex, int source)
+{
+    if (vertex == source)
+    {
+        printf("%d ", source);
+        return;
+    }
+    print_path(parent, parent[vertex], source);
+    printf("%d ", vertex);
+}
+
+void dijkstra_serial(int V, int *adjacency_matrix, int *len, int *temp_distance)
+{
+    boolean *visited = (boolean *)malloc(V * sizeof(boolean));
+    int *parent = (int *)malloc(V * sizeof(int));
+
+    clock_t start = clock();
+
+    for (int source = 0; source < V; source++)
+    {
         for (int i = 0; i < V; i++)
         {
-            if (vertices[i].visited == FALSE)
-            {
-                vertices[i].visited = TRUE;
-                for (int v = 0; v < V; v++)
-                {
-                    int weight = find_edge(vertices[i], vertices[v], edges, weights, E);
-                    if (weight < INFINITY)
-                    {
-                        if (temp_distance[v] > len[i] + weight)
-                        {
-                            temp_distance[v] = len[i] + weight;
-                        }
-                    }
-                }
-            }
+            visited[i] = FALSE;
+            temp_distance[i] = INFINITY;
+            len[source * V + i] = INFINITY;
+            parent[i] = -1;
+        }
 
-            for (int j = 0; j < V; j++)
+        len[source * V + source] = 0; // Set the distance of the source vertex as 0
+
+        for (int count = 0; count < V - 1; count++)
+        {
+            int current_vertex = find_min_distance(V, len + source * V, visited);
+
+            visited[current_vertex] = TRUE;
+
+            for (int v = 0; v < V; v++)
             {
-                if (len[j] > temp_distance[j])
+                int weight = adjacency_matrix[current_vertex * V + v];
+                if (!visited[v] && weight && len[source * V + current_vertex] != INFINITY &&
+                    len[source * V + current_vertex] + weight < len[source * V + v])
                 {
-                    vertices[j].visited = FALSE;
-                    len[j] = temp_distance[j];
+                    len[source * V + v] = len[source * V + current_vertex] + weight;
+                    temp_distance[v] = len[source * V + v];
+                    parent[v] = current_vertex;
                 }
-                temp_distance[j] = len[j];
             }
         }
+
+        // for (int i = 0; i < V; i++)
+        // {
+        //     if (i != source)
+        //     {
+        //         printf("Shortest Path from %d to %d: ", source, i);
+        //         print_path(parent, i, source);
+        //         printf(" (Length: %d)\n", len[source * V + i]);
+        //     }
+        // }
     }
 
     clock_t end = clock();
     float seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("Elapsed time on CPU = %f sec\n", seconds);
+    printf("Total elapsed time on CPU = %f sec\n", seconds);
 
-    free(root);
+    free(visited);
+    free(parent);
 }
 
 int main(int argc, char **argv)
@@ -134,24 +132,20 @@ int main(int argc, char **argv)
     int *len, *temp_distance;
 
     int V = atoi(argv[1]); /* Number of vertices */
-    int E = atoi(argv[2]); /* Number of edges */
 
-    vertices = (Vertex *)malloc(sizeof(Vertex) * V);
-    edges = (Edge *)malloc(sizeof(Edge) * E);
-    weights = (int *)malloc(E * sizeof(int));
-
-    generate_graph(V, E); /* Create random graph */
-
-    len = (int *)malloc(V * sizeof(int));
+    len = (int *)malloc(V * V * sizeof(int));
     temp_distance = (int *)malloc(V * sizeof(int));
 
-    dijkstra_serial(V, E, len, temp_distance);
+    int *adjacency_matrix = (int *)malloc(V * V * sizeof(int));
+    generate_random_graph(V, adjacency_matrix);
 
-    free(vertices);
-    free(edges);
-    free(weights);
+    // print_adjacency_matrix(V, adjacency_matrix);
+
+    dijkstra_serial(V, adjacency_matrix, len, temp_distance);
+
     free(len);
     free(temp_distance);
+    free(adjacency_matrix);
 
     return 0;
 }
