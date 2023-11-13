@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("USAGE: ./dijkstra <number_of_vertices>\n");
+        printf("USAGE: ./dijkstra <number_of_vertices>\n"); // FIXME:
         return 1;
     }
 

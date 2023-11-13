@@ -1,1 +1,6 @@
 output
+.vscode
+dijkstra_parallel.exe
+dijkstra_parallel.exp
+dijkstra_parallel.lib
+dijkstra_serial.exe
