@@ -32,7 +32,7 @@ void generate_random_graph(int V, int *adjacency_matrix)
 
 void print_adjacency_matrix(int V, int *adjacency_matrix)
 {
-    printf("Adjacency Matrix:\n");
+    printf("\nADJACENCY MATRIX:\n");
     for (int i = 0; i < V; i++)
     {
         for (int j = 0; j < V; j++)
@@ -59,21 +59,9 @@ int find_min_distance(int V, int *distance, boolean *visited)
     return min_index;
 }
 
-void print_path(int *parent, int vertex, int source)
-{
-    if (vertex == source)
-    {
-        printf("%d ", source);
-        return;
-    }
-    print_path(parent, parent[vertex], source);
-    printf("%d ", vertex);
-}
-
 void dijkstra_serial(int V, int *adjacency_matrix, int *len, int *temp_distance)
 {
     boolean *visited = (boolean *)malloc(V * sizeof(boolean));
-    int *parent = (int *)malloc(V * sizeof(int));
 
     clock_t start = clock();
 
@@ -84,10 +72,9 @@ void dijkstra_serial(int V, int *adjacency_matrix, int *len, int *temp_distance)
             visited[i] = FALSE;
             temp_distance[i] = INFINITY;
             len[source * V + i] = INFINITY;
-            parent[i] = -1;
         }
 
-        len[source * V + source] = 0; // Set the distance of the source vertex as 0
+        len[source * V + source] = 0; /* Set the distance of the source vertex as 0 */
 
         for (int count = 0; count < V - 1; count++)
         {
@@ -103,33 +90,28 @@ void dijkstra_serial(int V, int *adjacency_matrix, int *len, int *temp_distance)
                 {
                     len[source * V + v] = len[source * V + current_vertex] + weight;
                     temp_distance[v] = len[source * V + v];
-                    parent[v] = current_vertex;
                 }
             }
         }
-
-        // for (int i = 0; i < V; i++)
-        // {
-        //     if (i != source)
-        //     {
-        //         printf("Shortest Path from %d to %d: ", source, i);
-        //         print_path(parent, i, source);
-        //         printf(" (Length: %d)\n", len[source * V + i]);
-        //     }
-        // }
     }
 
     clock_t end = clock();
     float seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("Total elapsed time on CPU = %f sec\n", seconds);
+    printf("TOTAL ELAPSED TIME ON CPU = %f SECS\n", seconds);
 
     free(visited);
-    free(parent);
 }
 
 int main(int argc, char **argv)
 {
     int *len, *temp_distance;
+
+    /* Usage case */
+    if (argc != 2)
+    {
+        printf("USAGE: ./dijkstra <number_of_vertices>\n");
+        return 1;
+    }
 
     int V = atoi(argv[1]); /* Number of vertices */
 
@@ -137,6 +119,7 @@ int main(int argc, char **argv)
     temp_distance = (int *)malloc(V * sizeof(int));
 
     int *adjacency_matrix = (int *)malloc(V * V * sizeof(int));
+
     generate_random_graph(V, adjacency_matrix);
 
     // print_adjacency_matrix(V, adjacency_matrix);
