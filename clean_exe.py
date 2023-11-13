@@ -1,10 +1,10 @@
 import os
 
 # Files to delete
-files_to_delete = ["dijkstra_parallel.exe", "dijkstra_parallel.exp",
-                   "dijkstra_parallel.lib", "dijkstra_serial.exe",
-                   "dijkstra_comparison.exe", "dijkstra_comparison.exp",
-                   "dijkstra_comparison.lib"]
+files_to_delete = ["apsp_dijkstra/dijkstra_parallel.exe", "apsp_dijkstra/dijkstra_parallel.exp",
+                   "apsp_dijkstra/dijkstra_parallel.lib", "apsp_dijkstra/dijkstra_serial.exe",
+                   "apsp_dijkstra/dijkstra_comparison.exe", "apsp_dijkstra/dijkstra_comparison.exp",
+                   "apsp_dijkstra/dijkstra_comparison.lib"]
 
 # Directory path for files
 directory_path = os.path.dirname(os.path.abspath(__file__))
