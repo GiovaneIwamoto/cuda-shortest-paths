@@ -53,7 +53,7 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
     int source = blockIdx.x;
     int tid = threadIdx.x;
 
-    if (tid < V)
+    if (tid < V) /* Init arrays for current thread */
     {
         visited[tid] = FALSE;
         temp_distance[tid] = INFINITY;
@@ -62,19 +62,20 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
 
     __syncthreads();
 
-    if (tid == 0)
+    if (tid == 0) /* Set distance of the source vertex to zero */
     {
         len[source * V + source] = 0;
     }
 
     __syncthreads();
 
-    /* Algorithm */
+    /* Start Dijkstra algorithm */
     for (int count = 0; count < V - 1; count++)
     {
         int current_vertex = -1;
         int min_distance = INFINITY;
 
+        /* Find vertex with min distance among unvisited */
         for (int v = 0; v < V; v++)
         {
             if (!visited[v] && len[source * V + v] <= min_distance)
@@ -83,17 +84,17 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
                 current_vertex = v;
             }
         }
-
-        visited[current_vertex] = TRUE;
+        visited[current_vertex] = TRUE; /* Current marked as visited */
 
         __syncthreads();
 
-        for (int v = 0; v < V; v++)
+        for (int v = 0; v < V; v++) /* Update dist for neighboring vertices */
         {
             int weight = adjacency_matrix[current_vertex * V + v];
             if (!visited[v] && weight && len[source * V + current_vertex] != INFINITY &&
                 len[source * V + current_vertex] + weight < len[source * V + v])
             {
+                /* Update dist if shorter path is found */
                 len[source * V + v] = len[source * V + current_vertex] + weight;
                 temp_distance[v] = len[source * V + v];
             }
@@ -102,41 +103,26 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
     }
 }
 
-/* Finds vertex with the minimum distance among the vertices that have not been visited yet */
-int find_min_distance(int V, int *distance, boolean *visited) // FIXME:
-{
-    int min_distance = INFINITY; /* Init value */
-    int min_index = -1;
-
-    for (int v = 0; v < V; v++) /* Iterates over all vertices */
-    {
-        if (!visited[v] && distance[v] <= min_distance)
-        {
-            min_distance = distance[v];
-            min_index = v;
-        }
-    }
-    return min_index;
-}
-
 void dijkstra_parallel(int V, int *adjacency_matrix, int *len, int *temp_distance)
 {
     boolean *d_visited;
     int *d_len, *d_temp_distance;
 
+    /* Allocate memory on GPU */
     cudaMalloc((void **)&d_visited, V * sizeof(boolean));
     cudaMalloc((void **)&d_len, V * V * sizeof(int));
     cudaMalloc((void **)&d_temp_distance, V * sizeof(int));
 
-    dim3 blockSize(V);
-    dim3 gridSize(V);
+    dim3 blockSize(V); /* 1D block with V threads */
+    dim3 gridSize(V);  /* 1D grid with V blocks */
     int sharedMemorySize = V * (sizeof(boolean) + 2 * sizeof(int));
 
-    clock_t start = clock();
+    clock_t start = clock(); /* Start timer */
 
+    /* Launch CUDA kernel */
     dijkstra_kernel<<<gridSize, blockSize, sharedMemorySize>>>(V, adjacency_matrix, d_len, d_temp_distance, d_visited);
 
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize(); /* Sync GPU and CPU to ensure kernel finished*/
 
     cudaMemcpy(len, d_len, V * V * sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(temp_distance, d_temp_distance, V * sizeof(int), cudaMemcpyDeviceToHost);
@@ -145,6 +131,7 @@ void dijkstra_parallel(int V, int *adjacency_matrix, int *len, int *temp_distanc
     float seconds = (float)(end - start) / CLOCKS_PER_SEC;
     printf("TOTAL ELAPSED TIME ON GPU = %f SECS\n", seconds);
 
+    /* Free allocated memory on GPU */
     cudaFree(d_visited);
     cudaFree(d_len);
     cudaFree(d_temp_distance);
@@ -154,7 +141,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        printf("USAGE: ./dijkstra <number_of_vertices>\n"); // FIXME:
+        printf("USAGE: ./dijkstra_parallel <number_of_vertices>\n");
         return 1;
     }
 
