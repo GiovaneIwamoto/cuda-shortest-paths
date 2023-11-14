@@ -11,3 +11,6 @@ apsp_floyd/floyd_serial.exe
 apsp_floyd/floyd_parallel.exe
 apsp_floyd/floyd_parallel.exp
 apsp_floyd/floyd_parallel.lib
+apsp_floyd/floyd_comparison.exe
+apsp_floyd/floyd_comparison.exp
+apsp_floyd/floyd_comparison.lib
