@@ -47,21 +47,64 @@ void generate_random_adj_matrix(int n_vertices)
 }
 
 /* Kernel CUDA Floyd algorithm */
-__global__ void floyd_warshall_parallel(int *dev_dp, int n_vertices, int k)
+__global__ void floyd_warshall_kernel(int *dev_dp, int n_vertices, int k)
 {
-    int i, j;
-    int tid = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+    int i = blockIdx.y * blockDim.y + threadIdx.y;
+    int j = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (tid < n_vertices * n_vertices) /* tid is within matrix dim */
+    if (i < n_vertices && j < n_vertices)
     {
-        i = tid / n_vertices;
-        j = tid - i * n_vertices;
+        int ij_index = i * n_vertices + j;
+        int ik_index = i * n_vertices + k;
+        int kj_index = k * n_vertices + j;
 
-        if (dev_dp[tid] > (dev_dp[i * n_vertices + k]) + (dev_dp[k * n_vertices + j]))
+        if (dev_dp[ik_index] != INFNTY && dev_dp[kj_index] != INFNTY)
         {
-            dev_dp[tid] = (dev_dp[i * n_vertices + k]) + (dev_dp[k * n_vertices + j]);
+            int sum = dev_dp[ik_index] + dev_dp[kj_index];
+            if (sum < dev_dp[ij_index])
+            {
+                dev_dp[ij_index] = sum;
+            }
         }
     }
+}
+
+// Function to initialize GPU and run Floyd-Warshall algorithm
+void floyd_warshall_parallel(int **adj_matrix, int **dp_matrix, int n_vertices)
+{
+    dim3 blockSize(16, 16);
+    dim3 gridSize((n_vertices + blockSize.x - 1) / blockSize.x, (n_vertices + blockSize.y - 1) / blockSize.y);
+
+    int *dev_dp;
+    cudaMalloc((void **)&dev_dp, n_vertices * n_vertices * sizeof(int));
+
+    for (int i = 0; i < n_vertices; i++)
+    {
+        cudaMemcpy(dev_dp + i * n_vertices, adj_matrix[i], n_vertices * sizeof(int), cudaMemcpyHostToDevice);
+    }
+
+    clock_t start = clock(); /* Start measuring execution time */
+
+    /* Execute kernel for each vertex, k pivot */
+    for (int k = 0; k < n_vertices; k++)
+    {
+        floyd_warshall_kernel<<<gridSize, blockSize>>>(dev_dp, n_vertices, k);
+        cudaDeviceSynchronize(); /* Sync all kernels finished */
+    }
+
+    /* Stop measuring execution time */
+    clock_t end = clock();
+    float seconds = (float)(end - start) / CLOCKS_PER_SEC;
+    printf("TOTAL ELAPSED TIME ON GPU = %f SECS\n", seconds);
+
+    /* Return dp matrix to CPU */
+    for (int i = 0; i < n_vertices; i++)
+    {
+        cudaMemcpy(dp_matrix[i], dev_dp + i * n_vertices, n_vertices * sizeof(int), cudaMemcpyDeviceToHost);
+    }
+
+    /* Free allocated memory */
+    cudaFree(dev_dp);
 }
 
 int main(int argc, char **argv)
@@ -82,42 +125,17 @@ int main(int argc, char **argv)
     }
 
     generate_random_adj_matrix(n_vertices);
-
-    dim3 blockSize(16, 16);
-    dim3 gridSize((n_vertices + blockSize.x - 1) / blockSize.x, (n_vertices + blockSize.y - 1) / blockSize.y);
-
-    int *dev_dp;
-    cudaMalloc((void **)&dev_dp, n_vertices * n_vertices * sizeof(int));
-
-    for (int i = 0; i < n_vertices; i++)
-    {
-        cudaMemcpy(dev_dp + i * n_vertices, adjacency_matrix[i], n_vertices * sizeof(int),
-                   cudaMemcpyHostToDevice);
-    }
-
-    clock_t start = clock(); /* Start measuring execution time */
-
-    /* Execute kernel for each vertex, k pivot */
-    for (int k = 0; k < n_vertices; k++)
-    {
-        floyd_warshall_parallel<<<gridSize, blockSize>>>(dev_dp, n_vertices, k);
-        cudaDeviceSynchronize(); /* Sync all kernels finished */
-    }
-
-    /* Stop measuring execution time */
-    clock_t end = clock();
-    float seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("TOTAL ELAPSED TIME ON GPU = %f SECS\n", seconds);
-
-    /* Return dp matrix to CPU */
-    for (int i = 0; i < n_vertices; i++)
-    {
-        cudaMemcpy(dp_matrix[i], dev_dp + i * n_vertices, n_vertices * sizeof(int),
-                   cudaMemcpyDeviceToHost);
-    }
+    floyd_warshall_parallel(adjacency_matrix, dp_matrix, n_vertices);
 
     /* Free allocated memory */
+    for (int i = 0; i < n_vertices; i++)
+    {
+        free(dp_matrix[i]);
+        free(adjacency_matrix[i]);
+    }
+
     free(dp_matrix);
+    free(adjacency_matrix);
 
     return 0;
 }
