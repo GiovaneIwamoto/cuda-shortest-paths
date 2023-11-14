@@ -4,7 +4,9 @@ import os
 files_to_delete = ["apsp_dijkstra/dijkstra_parallel.exe", "apsp_dijkstra/dijkstra_parallel.exp",
                    "apsp_dijkstra/dijkstra_parallel.lib", "apsp_dijkstra/dijkstra_serial.exe",
                    "apsp_dijkstra/dijkstra_comparison.exe", "apsp_dijkstra/dijkstra_comparison.exp",
-                   "apsp_dijkstra/dijkstra_comparison.lib", "apsp_floyd/floyd_serial.exe"]
+                   "apsp_dijkstra/dijkstra_comparison.lib", "apsp_floyd/floyd_serial.exe",
+                   "apsp_floyd/floyd_parallel.exe", "apsp_floyd/floyd_parallel.exp",
+                   "apsp_floyd/floyd_parallel.lib"]
 
 # Directory path for files
 directory_path = os.path.dirname(os.path.abspath(__file__))
