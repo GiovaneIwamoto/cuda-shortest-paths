@@ -7,7 +7,7 @@
 
 #define TRUE 1
 #define FALSE 0
-#define INFINITY INT_MAX
+#define INFNTY INT_MAX
 
 typedef int boolean;
 
@@ -50,7 +50,7 @@ void print_adjacency_matrix(int V, int *adjacency_matrix)
 /* Finds vertex with the minimum distance among the vertices that have not been visited yet */
 int find_min_distance(int V, int *distance, boolean *visited)
 {
-    int min_distance = INFINITY; /* Init value */
+    int min_distance = INFNTY; /* Init value */
     int min_index = -1;
 
     for (int v = 0; v < V; v++) /* Iterates over all vertices */
@@ -76,8 +76,8 @@ void dijkstra_serial(int V, int *adjacency_matrix, int *len, int *temp_distance)
         for (int i = 0; i < V; i++) /* Initialize vars arrays to current source */
         {
             visited[i] = FALSE;
-            temp_distance[i] = INFINITY;
-            len[source * V + i] = INFINITY;
+            temp_distance[i] = INFNTY;
+            len[source * V + i] = INFNTY;
         }
 
         len[source * V + source] = 0; /* Set the distance of the source vertex as 0 */
@@ -92,7 +92,7 @@ void dijkstra_serial(int V, int *adjacency_matrix, int *len, int *temp_distance)
             for (int v = 0; v < V; v++)
             {
                 int weight = adjacency_matrix[current_vertex * V + v];
-                if (!visited[v] && weight && len[source * V + current_vertex] != INFINITY &&
+                if (!visited[v] && weight && len[source * V + current_vertex] != INFNTY &&
                     len[source * V + current_vertex] + weight < len[source * V + v])
                 {
                     /* Updating the distance is beneficial */
@@ -120,8 +120,8 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
     if (tid < V) /* Init arrays for current thread */
     {
         visited[tid] = FALSE;
-        temp_distance[tid] = INFINITY;
-        len[source * V + tid] = INFINITY;
+        temp_distance[tid] = INFNTY;
+        len[source * V + tid] = INFNTY;
     }
 
     __syncthreads();
@@ -137,7 +137,7 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
     for (int count = 0; count < V - 1; count++)
     {
         int current_vertex = -1;
-        int min_distance = INFINITY;
+        int min_distance = INFNTY;
 
         /* Find vertex with min distance among unvisited */
         for (int v = 0; v < V; v++)
@@ -155,7 +155,7 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
         for (int v = 0; v < V; v++) /* Update dist for neighboring vertices */
         {
             int weight = adjacency_matrix[current_vertex * V + v];
-            if (!visited[v] && weight && len[source * V + current_vertex] != INFINITY &&
+            if (!visited[v] && weight && len[source * V + current_vertex] != INFNTY &&
                 len[source * V + current_vertex] + weight < len[source * V + v])
             {
                 /* Update dist if shorter path is found */

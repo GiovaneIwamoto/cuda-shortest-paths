@@ -7,7 +7,7 @@
 
 #define TRUE 1
 #define FALSE 0
-#define INFINITY INT_MAX
+#define INFNTY INT_MAX
 
 typedef int boolean;
 
@@ -56,8 +56,8 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
     if (tid < V) /* Init arrays for current thread */
     {
         visited[tid] = FALSE;
-        temp_distance[tid] = INFINITY;
-        len[source * V + tid] = INFINITY;
+        temp_distance[tid] = INFNTY;
+        len[source * V + tid] = INFNTY;
     }
 
     __syncthreads();
@@ -73,7 +73,7 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
     for (int count = 0; count < V - 1; count++)
     {
         int current_vertex = -1;
-        int min_distance = INFINITY;
+        int min_distance = INFNTY;
 
         /* Find vertex with min distance among unvisited */
         for (int v = 0; v < V; v++)
@@ -91,7 +91,7 @@ __global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *tem
         for (int v = 0; v < V; v++) /* Update dist for neighboring vertices */
         {
             int weight = adjacency_matrix[current_vertex * V + v];
-            if (!visited[v] && weight && len[source * V + current_vertex] != INFINITY &&
+            if (!visited[v] && weight && len[source * V + current_vertex] != INFNTY &&
                 len[source * V + current_vertex] + weight < len[source * V + v])
             {
                 /* Update dist if shorter path is found */
