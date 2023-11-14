@@ -7,3 +7,4 @@ apsp_dijkstra/dijkstra_serial.exe
 apsp_dijkstra/dijkstra_comparison.exe 
 apsp_dijkstra/dijkstra_comparison.exp
 apsp_dijkstra/dijkstra_comparison.lib
+apsp_floyd/floyd_serial.exe
