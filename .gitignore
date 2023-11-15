@@ -14,3 +14,4 @@ apsp_floyd/floyd_parallel.lib
 apsp_floyd/floyd_comparison.exe
 apsp_floyd/floyd_comparison.exp
 apsp_floyd/floyd_comparison.lib
+apsp_floyd/floyd_results.log
