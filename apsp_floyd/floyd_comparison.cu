@@ -71,8 +71,13 @@ void floyd_warshall_serial(int **graph, int **dp, int N)
 
     /* Stop measuring execution time */
     clock_t end = clock();
-    float seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("TOTAL ELAPSED TIME ON CPU = %f SECS\n", seconds);
+    float cpu_time = (float)(end - start) / CLOCKS_PER_SEC;
+
+    /* Save serial results to log file */
+    FILE *file = fopen("floyd_results.log", "a");
+    fprintf(file, "Floyd CPU | Execution Time: %f seconds | Size: %d\n", cpu_time, n_vertices);
+
+    fclose(file);
 }
 
 /* Kernel CUDA Floyd algorithm */
@@ -123,8 +128,12 @@ void floyd_warshall_parallel(int **adj_matrix, int **dp_matrix, int n_vertices)
 
     /* Stop measuring execution time */
     clock_t end = clock();
-    float seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    printf("TOTAL ELAPSED TIME ON GPU = %f SECS\n", seconds);
+    float gpu_time = (float)(end - start) / CLOCKS_PER_SEC;
+
+    /* Save parallel results to log file */
+    FILE *file = fopen("floyd_results.log", "a");
+    fprintf(file, "Floyd GPU | Execution Time: %f seconds | Size: %d\n", gpu_time, n_vertices);
+    fclose(file);
 
     /* Return dp matrix to CPU */
     for (int i = 0; i < n_vertices; i++)
@@ -141,7 +150,7 @@ int main(int argc, char **argv)
     int i;
     if (argc != 2)
     {
-        printf("USAGE: ./floyd_parallel <number_of_vertices>\n");
+        printf("USAGE: ./floyd_comparison <number_of_vertices>\n");
         return 1;
     }
 

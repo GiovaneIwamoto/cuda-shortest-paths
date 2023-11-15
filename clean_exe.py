@@ -7,7 +7,8 @@ files_to_delete = ["apsp_dijkstra/dijkstra_parallel.exe", "apsp_dijkstra/dijkstr
                    "apsp_dijkstra/dijkstra_comparison.lib", "apsp_floyd/floyd_serial.exe",
                    "apsp_floyd/floyd_parallel.exe", "apsp_floyd/floyd_parallel.exp",
                    "apsp_floyd/floyd_parallel.lib", "apsp_floyd/floyd_comparison.exe",
-                   "apsp_floyd/floyd_comparison.exp", "apsp_floyd/floyd_comparison.lib"]
+                   "apsp_floyd/floyd_comparison.exp", "apsp_floyd/floyd_comparison.lib",
+                   "apsp_floyd/floyd_results.log"]
 
 # Directory path for files
 directory_path = os.path.dirname(os.path.abspath(__file__))
