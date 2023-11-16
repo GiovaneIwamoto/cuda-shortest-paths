@@ -33,97 +33,76 @@ void generate_random_graph(int V, int *adjacency_matrix)
     }
 }
 
-/* Print adjacency matrix */
-void print_adjacency_matrix(int V, int *adjacency_matrix)
+__global__ void dijkstra_kernel(int V, int *graph, int *len, int *temp_distance, boolean *visited)
 {
-    printf("\nADJACENCY MATRIX:\n");
-    for (int i = 0; i < V; i++)
+    int source = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (source < V)
     {
-        for (int j = 0; j < V; j++)
+        for (int i = 0; i < V; ++i)
         {
-            printf("%d ", adjacency_matrix[i * V + j]);
+            visited[i] = FALSE;
+            temp_distance[i] = INFNTY;
+            len[source * V + i] = INFNTY;
         }
-        printf("\n");
-    }
-}
 
-/* Kernel for Dijkstra */
-__global__ void dijkstra_kernel(int V, int *adjacency_matrix, int *len, int *temp_distance, boolean *visited)
-{
-    int source = blockIdx.x;
-    int tid = threadIdx.x;
-
-    if (tid < V) /* Init arrays for current thread */
-    {
-        visited[tid] = FALSE;
-        temp_distance[tid] = INFNTY;
-        len[source * V + tid] = INFNTY;
-    }
-
-    __syncthreads();
-
-    if (tid == 0) /* Set distance of the source vertex to zero */
-    {
         len[source * V + source] = 0;
-    }
 
-    __syncthreads();
-
-    /* Start Dijkstra algorithm */
-    for (int count = 0; count < V - 1; count++)
-    {
-        int current_vertex = -1;
-        int min_distance = INFNTY;
-
-        /* Find vertex with min distance among unvisited */
-        for (int v = 0; v < V; v++)
+        for (int count = 0; count < V - 1; ++count)
         {
-            if (!visited[v] && len[source * V + v] <= min_distance)
+            int current_vertex = -1;
+            int min_distance = INFNTY;
+
+            for (int v = 0; v < V; ++v)
             {
-                min_distance = len[source * V + v];
-                current_vertex = v;
+                if (!visited[v] && len[source * V + v] <= min_distance)
+                {
+                    min_distance = len[source * V + v];
+                    current_vertex = v;
+                }
+            }
+
+            visited[current_vertex] = TRUE;
+
+            for (int v = 0; v < V; ++v)
+            {
+                int weight = graph[current_vertex * V + v];
+                if (!visited[v] && weight && len[source * V + current_vertex] != INFNTY &&
+                    len[source * V + current_vertex] + weight < len[source * V + v])
+                {
+                    len[source * V + v] = len[source * V + current_vertex] + weight;
+                    temp_distance[v] = len[source * V + v];
+                }
             }
         }
-        visited[current_vertex] = TRUE; /* Current marked as visited */
-
-        __syncthreads();
-
-        for (int v = 0; v < V; v++) /* Update dist for neighboring vertices */
-        {
-            int weight = adjacency_matrix[current_vertex * V + v];
-            if (!visited[v] && weight && len[source * V + current_vertex] != INFNTY &&
-                len[source * V + current_vertex] + weight < len[source * V + v])
-            {
-                /* Update dist if shorter path is found */
-                len[source * V + v] = len[source * V + current_vertex] + weight;
-                temp_distance[v] = len[source * V + v];
-            }
-        }
-        __syncthreads();
     }
 }
 
 void dijkstra_parallel(int V, int *adjacency_matrix, int *len, int *temp_distance)
 {
     boolean *d_visited;
-    int *d_len, *d_temp_distance;
+    int *d_len, *d_temp_distance, *d_adjacency_matrix;
 
     /* Allocate memory on GPU */
     cudaMalloc((void **)&d_visited, V * sizeof(boolean));
     cudaMalloc((void **)&d_len, V * V * sizeof(int));
     cudaMalloc((void **)&d_temp_distance, V * sizeof(int));
+    cudaMalloc((void **)&d_adjacency_matrix, V * V * sizeof(int));
 
-    dim3 blockSize(V); /* 1D block with V threads */
-    dim3 gridSize(V);  /* 1D grid with V blocks */
-    int sharedMemorySize = V * (sizeof(boolean) + 2 * sizeof(int));
+    /* Copy data to GPU */
+    cudaMemcpy(d_adjacency_matrix, adjacency_matrix, V * V * sizeof(int), cudaMemcpyHostToDevice);
+
+    dim3 blockSize(256);
+    dim3 gridSize((V + blockSize.x - 1) / blockSize.x);
 
     clock_t start = clock(); /* Start timer */
 
     /* Launch CUDA kernel */
-    dijkstra_kernel<<<gridSize, blockSize, sharedMemorySize>>>(V, adjacency_matrix, d_len, d_temp_distance, d_visited);
+    dijkstra_kernel<<<gridSize, blockSize>>>(V, d_adjacency_matrix, d_len, d_temp_distance, d_visited);
 
-    cudaDeviceSynchronize(); /* Sync GPU and CPU to ensure kernel finished*/
+    cudaDeviceSynchronize(); /* Sync GPU and CPU to ensure kernel finished */
 
+    /* Copy results back to CPU */
     cudaMemcpy(len, d_len, V * V * sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(temp_distance, d_temp_distance, V * sizeof(int), cudaMemcpyDeviceToHost);
 
@@ -135,6 +114,7 @@ void dijkstra_parallel(int V, int *adjacency_matrix, int *len, int *temp_distanc
     cudaFree(d_visited);
     cudaFree(d_len);
     cudaFree(d_temp_distance);
+    cudaFree(d_adjacency_matrix);
 }
 
 int main(int argc, char **argv)
@@ -155,8 +135,6 @@ int main(int argc, char **argv)
 
     generate_random_graph(V, adjacency_matrix);
     dijkstra_parallel(V, adjacency_matrix, len, temp_distance);
-
-    /* print_adjacency_matrix(V, adjacency_matrix); */
 
     free(len);
     free(temp_distance);
