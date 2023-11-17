@@ -33,6 +33,7 @@ void generate_random_graph(int V, int *adjacency_matrix)
     }
 }
 
+/* Kernel for Dijkstra */
 __global__ void dijkstra_kernel(int V, int *graph, int *len, int *temp_distance, boolean *visited)
 {
     int source = blockIdx.x * blockDim.x + threadIdx.x;
