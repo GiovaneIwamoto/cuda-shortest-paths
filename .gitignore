@@ -1,4 +1,3 @@
-output
 .vscode
 apsp_dijkstra/dijkstra_parallel.exe
 apsp_dijkstra/dijkstra_parallel.exp
