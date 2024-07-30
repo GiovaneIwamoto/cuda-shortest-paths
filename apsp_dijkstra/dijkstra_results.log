@@ -23,6 +23,6 @@ Dijkstra CPU | Execution Time: 146.216995 seconds | Size: 2500
 Dijkstra GPU | Execution Time: 19.105000 seconds | Size: 3000
 Dijkstra CPU | Execution Time: 266.395996 seconds | Size: 3000
 Dijkstra GPU | Execution Time: 27.558001 seconds | Size: 3500
-Dijkstra CPU | Execution Time: 377.384003 seconds | Size: 3500
+Dijkstra CPU | Execution Time: 397.384003 seconds | Size: 3500
 Dijkstra GPU | Execution Time: 37.105999 seconds | Size: 4000
 Dijkstra CPU | Execution Time: 540.755981 seconds | Size: 4000

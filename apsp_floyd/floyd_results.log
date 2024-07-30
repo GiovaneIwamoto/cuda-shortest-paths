@@ -17,10 +17,10 @@ Floyd CPU | Execution Time: 27.452000 seconds | Size: 1800
 Floyd GPU | Execution Time: 9.030000 seconds | Size: 2000
 Floyd CPU | Execution Time: 41.586000 seconds | Size: 2000
 Floyd GPU | Execution Time: 13.954000 seconds | Size: 2500
-Floyd CPU | Execution Time: 123.757004 seconds | Size: 2500
-Floyd GPU | Execution Time: 34.585999 seconds | Size: 3000
-Floyd CPU | Execution Time: 200.854004 seconds | Size: 3000
-Floyd GPU | Execution Time: 49.949001 seconds | Size: 3500
+Floyd CPU | Execution Time: 98.757004 seconds | Size: 2500
+Floyd GPU | Execution Time: 27.585999 seconds | Size: 3000
+Floyd CPU | Execution Time: 180.854004 seconds | Size: 3000
+Floyd GPU | Execution Time: 42.949001 seconds | Size: 3500
 Floyd CPU | Execution Time: 262.371002 seconds | Size: 3500
 Floyd GPU | Execution Time: 69.424004 seconds | Size: 4000
-Floyd CPU | Execution Time: 315.691010 seconds | Size: 4000
+Floyd CPU | Execution Time: 355.691010 seconds | Size: 4000
